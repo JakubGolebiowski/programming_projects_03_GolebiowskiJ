@@ -1,3 +1,11 @@
+# -------------------------
+# Jakub Gołębiowski
+# start:
+# 30.04.2021
+# last changes:
+# 25.05.2021
+# -------------------------
+
 # Load datasets like iris (3-class dataset)
 from sklearn import datasets
 # Manipulate data
@@ -20,10 +28,12 @@ import datetime
 import copy
 import matplotlib.pyplot as plt
 
+# using for multi thread processing - 20-30% faster
 from joblib import parallel_backend
 
 # from numba import jit, njit, vectorize
 
+# Generating satisfied data format
 # # print("Divide the data and separate the inputs")
 # data = pd.read_csv("4BitClasses.txt", sep=";", dtype={"inputs": np.str})
 # data2 = data['inputs'].apply(lambda x: pd.Series(list(x)))
@@ -39,16 +49,19 @@ from joblib import parallel_backend
 # # print(data3.head())
 # # data2.to_csv('data_merged.csv', index=False)
 
-
+# importing data from file
 X = pd.read_csv("data_X2.csv")
 y = pd.read_csv("data_Y2.csv")
 print(X.shape)
 print(y.shape)
 
 
+# spliting data into test and train
 def load_data(test_size=0.90, random_state=0):
     X = pd.read_csv("data_X2.csv")
     y = pd.read_csv("data_Y2.csv")
+
+    # higher preprocessing data/sorting at least one member of each one for learn
     # xy = pd.concat([X, y], axis=1)
     # print(y.head())
     # print(X.head())
@@ -69,9 +82,6 @@ def load_data(test_size=0.90, random_state=0):
     # new_x = X
     # new_y = y
     # for i in range(1, len(new_data)):
-    #     # new_x = pd.concat([new_x, X.iloc[new_data[i]]], axis=0, ignore_index=False)
-    #     # new_y = pd.concat([new_y, y.iloc[new_data[i]]], axis=0, ignore_index=False)
-    #
     #     temp_x = new_x.loc[i].copy()
     #     temp_y = new_y.loc[i].copy()
     #     print(temp_x,new_x.loc[i], temp_y, new_x.loc[i])
@@ -80,26 +90,14 @@ def load_data(test_size=0.90, random_state=0):
     #     new_y.loc[i] = new_y.loc[new_data[i]].copy()
     #     new_y.loc[new_data[i]] = temp_y
     #     print(temp_x, new_x.loc[i], temp_y, new_x.loc[i])
-    #
-    #     # new_y.reindex([new_y.loc[i], new_y.loc[new_data[i]]])
-    #     # new_x.reindex([new_x.loc[i], new_x.loc[new_data[i]]])
-    #
-    #     # new_x.loc[-1] = X.iloc[new_data[i]]
-    #     # new_y.loc[-1] = y.iloc[new_data[i]]
-    #     # new_x.drop(new_x.index[i],inplace=True)
-    #     # new_y.drop(new_y.index[i],inplace=True)
-    #     # new_x.index = new_x.index + 1
-    #     # new_y.index = new_y.index + 1
-    #     # new_x = new_x.sort_index()
-    #     # new_y = new_y.sort_index()
-    #
-    # # new_x = new_x.sort_index()
-    # # new_y = new_y.sort_index()
+
     # new_x.to_csv('data_X2.csv', index=False)
     # new_y.to_csv('data_Y2.csv', index=False)
     # print(new_data.shape)
     # print(new_data)
     # dividing X, y into train and test data
+
+    # splitting output
     return train_test_split(X, y, test_size=test_size, random_state=random_state)
 
 
@@ -107,6 +105,7 @@ X_train, X_test, y_train, y_test = load_data()
 y_train = y_train.values.ravel()
 
 
+# SVM - poorly working for classification so we didn't use it
 def svm_our():
     clf = svm.SVC(gamma='auto')
     clf.fit(X_train, y_train)
@@ -116,6 +115,7 @@ def svm_our():
     print(clf.score(X_test, y_test))
 
 
+# Decision Tree - poorly working for classification so we didn't use it
 def decision_tree_our(X_train, X_test, y_train, y_test, max_depth=2):
     d_tree_model = DecisionTreeClassifier(max_depth=max_depth, criterion='entropy', ).fit(X_train, y_train)
     d_tree_predictions = d_tree_model.predict(X_test)
@@ -124,6 +124,7 @@ def decision_tree_our(X_train, X_test, y_train, y_test, max_depth=2):
     return d_tree_model.score(X_test, y_test)
 
 
+# Random Forest - poorly working for classification so we didn't use it
 def random_tree(X_train, X_test, y_train, y_test, max_depth=2):
     d_tree_model = RandomForestClassifier(max_depth=max_depth, criterion='entropy', ).fit(X_train, y_train)
     d_tree_predictions = d_tree_model.predict(X_test)
@@ -132,6 +133,7 @@ def random_tree(X_train, X_test, y_train, y_test, max_depth=2):
     return d_tree_model.score(X_test, y_test)
 
 
+# MLP Classifier - our main subject of research
 def mlp_classifier_our(activation, X_train, X_test, y_train, y_test, hidden_layer_sizes, max_iter=300):
     with parallel_backend('threading', n_jobs=-1):
         clf = MLPClassifier(random_state=404, hidden_layer_sizes=hidden_layer_sizes, max_iter=max_iter,
@@ -144,6 +146,7 @@ def mlp_classifier_our(activation, X_train, X_test, y_train, y_test, hidden_laye
     return clf.score(X_test, y_test)
 
 
+# Gradient Boosting - poorly working for classification so we didn't use it
 def gradient_boosting_our(X_train, X_test, y_train, y_test, n_estimators=100):
     with parallel_backend('threading', n_jobs=-1):
         clf = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=1.0,
@@ -160,6 +163,7 @@ def gradient_boosting_our(X_train, X_test, y_train, y_test, n_estimators=100):
 # mlp_classifier_our()
 # gradient_boosting_our()
 
+# MLP starts here - once it runs it generates scores of 33 models * len(iters_tab) in plots and csv
 def MLP():
     iters_tab = [150, 400, 500]
     for max_iter2 in iters_tab:
@@ -199,6 +203,7 @@ def MLP():
         datas.to_csv(str(max_iter) + "_sorted_" + str(datetime.datetime.now().timestamp()) + "_.csv", index=False)
 
 
+# start for research of Decision trees
 def DecisionTree():
     tab = [5000, 1000, None]
     train_to_test = [5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90]
@@ -235,6 +240,7 @@ def DecisionTree():
     datas.to_csv("decisionTree_" + str(datetime.datetime.now().timestamp()) + "_.csv", index=False)
 
 
+# start for research of Random Forest
 def RandomTreeClass():
     tab = [5000, 1000, None]
     train_to_test = [5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90]
@@ -272,6 +278,7 @@ def RandomTreeClass():
     datas.to_csv("RandomTree_" + str(datetime.datetime.now().timestamp()) + "_.csv", index=False)
 
 
+# Start for Gradient Boost - we didn't have time to examine the examples
 def GradientBoost():
     tab = [20, 50, 100]
     train_to_test = [5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90]
@@ -306,6 +313,7 @@ def GradientBoost():
     # print(datas)
 
     datas.to_csv("gradientBoost_" + str(datetime.datetime.now().timestamp()) + "_.csv", index=False)
+
 
 MLP()
 # DecisionTree()
